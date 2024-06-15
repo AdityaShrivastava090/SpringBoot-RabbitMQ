@@ -1,0 +1,23 @@
+# Additional Spring Boot application properties
+server:
+  port: 8080
+
+rabbitmq:
+  exchange_name: exchange_demo
+  queue: queue_demo
+  json_queue: json_queue
+  routing_key: routing_key_demo
+  json_routing_key: json_routing_key
+
+
+#spring:
+#  rabbitmq:
+#    host: localhost
+#    port: 5672
+#    username: guest
+#    password: guest
+#    virtual-host: /
+#    connection-timeout: 60000
+#    requested-heartbeat: 60
+#    ssl:
+#      enabled: false
