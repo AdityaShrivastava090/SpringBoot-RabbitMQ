@@ -23,6 +23,11 @@ public class RabbitMQProducer {
     @Autowired
     private RetryTemplate retryTemplate;
 
+
+    public static final String EXCHANGE_DLX_EXAMPLE = "x.error-handling-demo.dlx-dlq-example";
+    public static final String DL_ROUTING_KEY_ORIGINAL = "dlx-before";
+
+
     public void sendMessage(String message) {
         retryTemplate.execute(context -> {
             log.info("sending data to json queue.... {}", message);
@@ -30,7 +35,7 @@ public class RabbitMQProducer {
                 log.info("retry count {}", context.getRetryCount());
                 throw new RuntimeException();
             }
-            rabbitTemplate.convertAndSend(exchange, routingKey, message);
+            rabbitTemplate.convertAndSend(EXCHANGE_DLX_EXAMPLE, DL_ROUTING_KEY_ORIGINAL, message);
             return null;
         });
     }

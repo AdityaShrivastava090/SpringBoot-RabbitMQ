@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.Map;
+
 @Configuration
 public class RabbitMQConfig {
     @Value("${rabbitmq.queue}")
@@ -23,18 +25,29 @@ public class RabbitMQConfig {
     private String jsonRoutingKey;
 
 
+    public static final String QUEUE_DLQ_EXAMPLE = "q.error-handling-demo.dlx-dlq-example";
+    public static final String DL_QUEUE_DLQ_EXAMPLE = "q.error-handling-demo.dlx-dlq-example.dlq";
+    public static final String EXCHANGE_DLX_EXAMPLE = "x.error-handling-demo.dlx-dlq-example";
+    public static final String DL_EXCHANGE_DLX_EXAMPLE = "x.error-handling-demo.dlx-dlq-example.dlx";
+    public static final String DL_ROUTING_KEY_ORIGINAL = "dlx-before";
+    public static final String DL_ROUTING_KEY_DLQ_OVERRIDDEN = "dlx-after";
+
+
     @Bean
     public Queue queue() {
         return new Queue(queue);
     }
+
     @Bean
     public Queue jsonQueue() {
         return new Queue(jsonQueue);
     }
+
     @Bean
     public TopicExchange exchange() {
         return new TopicExchange(exchange);
     }
+
     @Bean
     public Binding binding() {
         return BindingBuilder
@@ -42,6 +55,7 @@ public class RabbitMQConfig {
                 .to(exchange())
                 .with(routingKey);
     }
+
     @Bean
     public Binding jsonBinding() {
         return BindingBuilder
@@ -56,10 +70,34 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public AmqpTemplate amqpTemplate(ConnectionFactory connectionFactory){
+    public AmqpTemplate amqpTemplate(ConnectionFactory connectionFactory) {
         RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
         rabbitTemplate.setMessageConverter(messageConverter());
         return rabbitTemplate;
+    }
+
+
+    @Bean
+    public Declarables dlxAndDlqConfig() {
+        Queue dlqDemoQueue = new Queue(QUEUE_DLQ_EXAMPLE, false, false, false,
+                Map.of(
+                        "x-dead-letter-exchange", DL_EXCHANGE_DLX_EXAMPLE,
+                        "x-dead-letter-routing-key", DL_ROUTING_KEY_DLQ_OVERRIDDEN
+                ));
+        DirectExchange dlxExchange = new DirectExchange(EXCHANGE_DLX_EXAMPLE, false, false);
+
+        Queue dlqdeadQueue = new Queue(DL_QUEUE_DLQ_EXAMPLE, false);
+        DirectExchange dlqDeadExchange = new DirectExchange(DL_EXCHANGE_DLX_EXAMPLE, false, false);
+
+        return new Declarables(
+                dlxExchange,
+                dlqDemoQueue,
+                BindingBuilder.bind(dlqDemoQueue).to(dlxExchange).with(DL_ROUTING_KEY_ORIGINAL),
+                dlqDeadExchange,
+                dlqdeadQueue,
+                BindingBuilder.bind(dlqdeadQueue).to(dlqDeadExchange).with(DL_ROUTING_KEY_DLQ_OVERRIDDEN)
+        );
+
     }
 
 }
