@@ -5,9 +5,12 @@ server:
 rabbitmq:
   exchange_name: exchange_demo
   queue: queue_demo
-  json_queue: json_queue
   routing_key: routing_key_demo
+  json_queue: json_queue
   json_routing_key: json_routing_key
+  dlExchange: dlx
+  dl_Queue: dlq
+  dl_routing_key: dlk
 
 
 #spring:
